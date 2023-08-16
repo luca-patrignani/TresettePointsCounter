@@ -21,10 +21,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -33,21 +31,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Device
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.example.tiptime.ui.theme.TipTimeTheme
-import java.text.NumberFormat
-
-var amountInput = mutableStateOf("0")
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +52,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TipTimeLayout()
+                    PointsCounterLayout(6, Modifier.padding(0.dp, 10.dp))
                 }
             }
         }
@@ -67,71 +60,81 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TipTimeLayout() {
+fun PointsCounterLayout(length: Int, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
-            .padding(horizontal = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ){
-        Column(Modifier.weight(1F), verticalArrangement = Arrangement.Center) {
-            Text("One", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            TextField(
-                onValueChange = { amountInput.value = it },
-                value = amountInput.value,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1F)) {
+            TeamText(text = stringResource(R.string.team_1), modifier = Modifier.fillMaxWidth())
+            Row {
+                Column(modifier = Modifier.weight(1F)) {
+                    PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
+                    repeat(length) {
+                        EditPointField(Modifier.padding(5.dp))
+                    }
+                }
+                Column(modifier = Modifier.weight(1F)) {
+                    PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
+                    repeat(length) {
+                        EditPointField(Modifier.padding(5.dp))
+                    }
+                }
+            }
         }
-        Column(Modifier.weight(1F), verticalArrangement = Arrangement.Center) {
-            Text("Two", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            TextField(
-                onValueChange = { amountInput.value = it },
-                value = amountInput.value,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-        }
-        Column(Modifier.weight(1F), verticalArrangement = Arrangement.Center) {
-            Text("Three", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            TextField(
-                onValueChange = { amountInput.value = it },
-                value = amountInput.value,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-        }
-        Column(Modifier.weight(1F), verticalArrangement = Arrangement.Center) {
-            Text("Four", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            TextField(
-                onValueChange = { amountInput.value = it },
-                value = amountInput.value,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
+        Column(modifier = Modifier.weight(1F)) {
+            TeamText(text = stringResource(R.string.team_2), modifier = Modifier.fillMaxWidth())
+            Row {
+                Column(modifier = Modifier.weight(1F)) {
+                    PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
+                    repeat(length) {
+                        EditPointField(Modifier.padding(5.dp))
+                    }
+                }
+                Column(modifier = Modifier.weight(1F)) {
+                    PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
+                    repeat(length) {
+                        EditPointField(Modifier.padding(5.dp))
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun EditNumberField(modifier: Modifier = Modifier) {
-    TextField(
-        onValueChange = { amountInput.value = it },
-        value = amountInput.value,
-        modifier = modifier,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+private fun PointsLabelText(text: String, modifier: Modifier) {
+    Text(
+        text = text,
+        textAlign = TextAlign.Center,
+        modifier = modifier
     )
 }
 
-/**
- * Calculates the tip based on the user input and format the tip amount
- * according to the local currency.
- * Example would be "$10.00".
- */
-private fun calculateTip(amount: Double, tipPercent: Double = 15.0): String {
-    val tip = tipPercent / 100 * amount
-    return NumberFormat.getCurrencyInstance().format(tip)
+@Composable
+private fun TeamText(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun EditPointField(modifier: Modifier = Modifier) {
+    TextField(
+        onValueChange = { },
+        value = "0",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = modifier,
+        textStyle = TextStyle(textAlign = TextAlign.Center)
+    )
 }
 
 @Preview(showBackground = true, device = Devices.PIXEL_3A, showSystemUi = true)
 @Composable
 fun TipTimeLayoutPreview() {
     TipTimeTheme {
-        TipTimeLayout()
+        PointsCounterLayout(6, Modifier.padding(0.dp, 10.dp))
     }
 }
