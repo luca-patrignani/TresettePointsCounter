@@ -30,7 +30,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -41,6 +43,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.example.tiptime.ui.theme.TipTimeTheme
+
+val inputGrid = Array(6) { _ -> Array(4) { _ -> mutableStateOf("") } }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,14 +74,16 @@ fun PointsCounterLayout(length: Int, modifier: Modifier = Modifier) {
             Row {
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
+                    val j = 0
                     repeat(length) {
-                        EditPointField(Modifier.padding(5.dp))
+                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
                     }
                 }
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
                     repeat(length) {
-                        EditPointField(Modifier.padding(5.dp))
+                        val j = 1
+                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
                     }
                 }
             }
@@ -88,13 +94,15 @@ fun PointsCounterLayout(length: Int, modifier: Modifier = Modifier) {
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
                     repeat(length) {
-                        EditPointField(Modifier.padding(5.dp))
+                        val j = 2
+                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
                     }
                 }
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
                     repeat(length) {
-                        EditPointField(Modifier.padding(5.dp))
+                        val j = 3
+                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
                     }
                 }
             }
@@ -121,10 +129,10 @@ private fun TeamText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EditPointField(modifier: Modifier = Modifier) {
+fun EditPointField(modifier: Modifier = Modifier, mutableState: MutableState<String>) {
     TextField(
-        onValueChange = { },
-        value = "0",
+        onValueChange = { mutableState.value = it },
+        value = mutableState.value,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = modifier,
         textStyle = TextStyle(textAlign = TextAlign.Center)
