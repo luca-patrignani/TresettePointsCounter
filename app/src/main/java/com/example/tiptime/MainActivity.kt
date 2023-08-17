@@ -32,7 +32,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -40,11 +39,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import com.example.tiptime.model.Model
+import com.example.tiptime.model.modelOf
 import com.example.tiptime.ui.theme.TipTimeTheme
+import java.lang.NumberFormatException
 
-val inputGrid = Array(6) { _ -> Array(4) { _ -> mutableStateOf("") } }
+const val DEFAULT_VALUE = 0
+val inputGrid = Array(6) { _ -> Array(4) { _ -> mutableStateOf(DEFAULT_VALUE) } }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    PointsCounterLayout(6, Modifier.padding(0.dp, 10.dp))
+                    PointsCounterLayout(6, modelOf(inputGrid), modifier = Modifier.padding(0.dp, 10.dp))
                 }
             }
         }
@@ -64,13 +66,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PointsCounterLayout(length: Int, modifier: Modifier = Modifier) {
+fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1F)) {
             TeamText(text = stringResource(R.string.team_1), modifier = Modifier.fillMaxWidth())
+            PointsSumText(sum = model::getTeam1Points, modifier = Modifier.fillMaxWidth())
             Row {
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
@@ -90,6 +93,7 @@ fun PointsCounterLayout(length: Int, modifier: Modifier = Modifier) {
         }
         Column(modifier = Modifier.weight(1F)) {
             TeamText(text = stringResource(R.string.team_2), modifier = Modifier.fillMaxWidth())
+            PointsSumText(sum = model::getTeam2Points, modifier = Modifier.fillMaxWidth())
             Row {
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
@@ -129,13 +133,30 @@ private fun TeamText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EditPointField(modifier: Modifier = Modifier, mutableState: MutableState<String>) {
+fun EditPointField(modifier: Modifier = Modifier, mutableState: MutableState<Int>) {
     TextField(
-        onValueChange = { mutableState.value = it },
-        value = mutableState.value,
+        onValueChange = {
+            try {
+                mutableState.value = Integer.parseInt(it)
+            } catch (_: NumberFormatException) {
+                mutableState.value = DEFAULT_VALUE
+            }
+        },
+        value = if (mutableState.value == DEFAULT_VALUE)  "" else mutableState.value.toString(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = modifier,
-        textStyle = TextStyle(textAlign = TextAlign.Center)
+        textStyle = TextStyle(textAlign = TextAlign.Center),
+        minLines = 1,
+        maxLines = 1,
+    )
+}
+
+@Composable
+fun PointsSumText(modifier: Modifier = Modifier, sum: () -> Int) {
+    Text(
+        text = sum().toString(),
+        textAlign = TextAlign.Center,
+        modifier = modifier
     )
 }
 
@@ -143,6 +164,6 @@ fun EditPointField(modifier: Modifier = Modifier, mutableState: MutableState<Str
 @Composable
 fun TipTimeLayoutPreview() {
     TipTimeTheme {
-        PointsCounterLayout(6, Modifier.padding(0.dp, 10.dp))
+        PointsCounterLayout(6, modelOf(inputGrid), Modifier.padding(0.dp, 10.dp))
     }
 }
