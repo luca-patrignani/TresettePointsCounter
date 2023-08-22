@@ -79,14 +79,14 @@ fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier
                     PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
                     val j = 0
                     repeat(length) {
-                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j + 2])
                     }
                 }
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
                     repeat(length) {
                         val j = 1
-                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                        EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
                     }
                 }
             }
@@ -99,14 +99,14 @@ fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier
                     PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
                     repeat(length) {
                         val j = 2
-                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j - 2])
                     }
                 }
                 Column(modifier = Modifier.weight(1F)) {
                     PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
                     repeat(length) {
                         val j = 3
-                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                        EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
                     }
                 }
             }
@@ -133,7 +133,33 @@ private fun TeamText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EditPointField(modifier: Modifier = Modifier, mutableState: MutableState<Int>) {
+fun EditPointField(modifier: Modifier = Modifier, thisTeamPoints: MutableState<Int>, otherTeamPoints: MutableState<Int>) {
+    TextField(
+        onValueChange = {
+            try {
+                thisTeamPoints.value = Integer.parseInt(it)
+                if (thisTeamPoints.value > 11) {
+                    thisTeamPoints.value = DEFAULT_VALUE
+                    otherTeamPoints.value = DEFAULT_VALUE
+                } else {
+                    otherTeamPoints.value = 11 - thisTeamPoints.value
+                }
+            } catch (_: NumberFormatException) {
+                thisTeamPoints.value = DEFAULT_VALUE
+                otherTeamPoints.value = DEFAULT_VALUE
+            }
+        },
+        value = if (thisTeamPoints.value == DEFAULT_VALUE)  "" else thisTeamPoints.value.toString(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = modifier,
+        textStyle = TextStyle(textAlign = TextAlign.Center),
+        minLines = 1,
+        maxLines = 1,
+    )
+}
+
+@Composable
+fun EditExtraPointField(modifier: Modifier = Modifier, mutableState: MutableState<Int>) {
     TextField(
         onValueChange = {
             try {
