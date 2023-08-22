@@ -30,5 +30,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Tip Time"
+rootProject.name = "Tresette Points Tracker"
 include(":app")

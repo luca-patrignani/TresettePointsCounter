@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.tiptime
+package com.example.pointscounter
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -40,9 +40,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.tiptime.model.Model
-import com.example.tiptime.model.modelOf
-import com.example.tiptime.ui.theme.TipTimeTheme
+import com.example.pointscounter.model.Model
+import com.example.pointscounter.model.modelOf
+import com.example.pointscounter.ui.theme.TipTimeTheme
 import java.lang.NumberFormatException
 
 const val DEFAULT_VALUE = 0

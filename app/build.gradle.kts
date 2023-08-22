@@ -25,7 +25,7 @@ android {
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.example.tiptime"
+        applicationId = "com.example.pointscounter"
         minSdk = 24
         targetSdk = 33
         versionCode = 1
@@ -64,7 +64,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    namespace = "com.example.tiptime"
+    namespace = "com.example.pointscounter"
 }
 
 dependencies {

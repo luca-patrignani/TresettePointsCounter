@@ -1,4 +1,4 @@
-package com.example.tiptime.model
+package com.example.pointscounter.model
 
 import androidx.compose.runtime.MutableState
 
