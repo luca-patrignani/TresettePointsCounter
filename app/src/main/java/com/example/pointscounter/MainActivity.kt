@@ -186,7 +186,8 @@ fun PointsSumText(modifier: Modifier = Modifier, sum: () -> Int) {
     )
 }
 
-@Preview(showBackground = true, device = Devices.PIXEL_3A, showSystemUi = true)
+@Preview(showBackground = true,
+    device = "id:pixel", showSystemUi = true)
 @Composable
 fun TipTimeLayoutPreview() {
     TipTimeTheme {
