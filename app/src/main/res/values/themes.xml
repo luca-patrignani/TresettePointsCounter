@@ -16,4 +16,5 @@
   -->
 <resources>
     <style name="Theme.TipTime" parent="android:Theme.Material.Light.NoActionBar" />
+
 </resources>
