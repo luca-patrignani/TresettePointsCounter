@@ -20,4 +20,5 @@
     <string name="team_2">Squadra 2</string>
     <string name="points">Punti</string>
     <string name="extra_points">Accuso</string>
+    <string name="new_game">Nuova partita</string>
 </resources>

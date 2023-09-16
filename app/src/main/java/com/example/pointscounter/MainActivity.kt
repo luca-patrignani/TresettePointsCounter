@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pointscounter.model.Model
@@ -46,7 +46,8 @@ import com.example.pointscounter.ui.theme.TipTimeTheme
 import java.lang.NumberFormatException
 
 const val DEFAULT_VALUE = 0
-val inputGrid = Array(6) { _ -> Array(4) { _ -> mutableStateOf(DEFAULT_VALUE) } }
+const val GRID_LENGTH = 8
+val inputGrid = Array(GRID_LENGTH) { _ -> Array(4) { _ -> mutableStateOf(DEFAULT_VALUE) } }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    PointsCounterLayout(6, modelOf(inputGrid), modifier = Modifier.padding(0.dp, 10.dp))
+                    PointsCounterLayout(GRID_LENGTH, modelOf(inputGrid), modifier = Modifier.padding(0.dp, 10.dp))
                 }
             }
         }
@@ -67,50 +68,54 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(modifier = Modifier.weight(1F)) {
-            TeamText(text = stringResource(R.string.team_1), modifier = Modifier.fillMaxWidth())
-            PointsSumText(sum = model::getTeam1Points, modifier = Modifier.fillMaxWidth())
-            Row {
-                Column(modifier = Modifier.weight(1F)) {
-                    PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
-                    val j = 0
-                    repeat(length) {
-                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j + 2])
+
+    Column {
+        Row(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1F)) {
+                TeamText(text = stringResource(R.string.team_1), modifier = Modifier.fillMaxWidth())
+                PointsSumText(sum = model::getTeam1Points, modifier = Modifier.fillMaxWidth())
+                Row {
+                    Column(modifier = Modifier.weight(1F)) {
+                        PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
+                        val j = 0
+                        repeat(length) {
+                            EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j + 2])
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1F)) {
+                        PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
+                        repeat(length) {
+                            val j = 1
+                            EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                        }
                     }
                 }
-                Column(modifier = Modifier.weight(1F)) {
-                    PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
-                    repeat(length) {
-                        val j = 1
-                        EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
+            }
+            Column(modifier = Modifier.weight(1F)) {
+                TeamText(text = stringResource(R.string.team_2), modifier = Modifier.fillMaxWidth())
+                PointsSumText(sum = model::getTeam2Points, modifier = Modifier.fillMaxWidth())
+                Row {
+                    Column(modifier = Modifier.weight(1F)) {
+                        PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
+                        repeat(length) {
+                            val j = 2
+                            EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j - 2])
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1F)) {
+                        PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
+                        repeat(length) {
+                            val j = 3
+                            EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                        }
                     }
                 }
             }
         }
-        Column(modifier = Modifier.weight(1F)) {
-            TeamText(text = stringResource(R.string.team_2), modifier = Modifier.fillMaxWidth())
-            PointsSumText(sum = model::getTeam2Points, modifier = Modifier.fillMaxWidth())
-            Row {
-                Column(modifier = Modifier.weight(1F)) {
-                    PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
-                    repeat(length) {
-                        val j = 2
-                        EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j - 2])
-                    }
-                }
-                Column(modifier = Modifier.weight(1F)) {
-                    PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
-                    repeat(length) {
-                        val j = 3
-                        EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
-                    }
-                }
-            }
-        }
+        ClearGridButton(modifier = Modifier.padding(10.dp))
     }
 }
 
@@ -186,11 +191,27 @@ fun PointsSumText(modifier: Modifier = Modifier, sum: () -> Int) {
     )
 }
 
+@Composable
+fun ClearGridButton(modifier: Modifier = Modifier) {
+    Button(
+        onClick = {
+        for (row in inputGrid) {
+            for (cell in row) {
+                cell.value = 0
+            }
+        }
+    },
+        modifier = modifier
+    ) {
+        Text(text = stringResource(id = R.string.new_game))
+    }
+}
+
 @Preview(showBackground = true,
     device = "id:pixel", showSystemUi = true)
 @Composable
 fun TipTimeLayoutPreview() {
     TipTimeTheme {
-        PointsCounterLayout(6, modelOf(inputGrid), Modifier.padding(0.dp, 10.dp))
+        PointsCounterLayout(GRID_LENGTH, modelOf(inputGrid), Modifier.padding(0.dp, 10.dp))
     }
 }
