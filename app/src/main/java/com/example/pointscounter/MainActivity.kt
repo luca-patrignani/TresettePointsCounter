@@ -15,16 +15,22 @@
  */
 package com.example.pointscounter
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,7 +38,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -43,15 +51,19 @@ import androidx.compose.ui.unit.dp
 import com.example.pointscounter.model.Model
 import com.example.pointscounter.model.modelOf
 import com.example.pointscounter.ui.theme.TipTimeTheme
-import java.lang.NumberFormatException
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 
 const val DEFAULT_VALUE = 0
 const val GRID_LENGTH = 8
-val inputGrid = Array(GRID_LENGTH) { _ -> Array(4) { _ -> mutableStateOf(DEFAULT_VALUE) } }
+var inputGrid = mutableStateListOf<Array<MutableState<Int>>>()
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val sharedPreference = this.getSharedPreferences("gameMemory", Context.MODE_PRIVATE)
+
+        loadFromSharedPreference(sharedPreference)
         setContent {
             TipTimeTheme {
                 // A surface container using the 'background' color from the theme
@@ -59,20 +71,42 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    PointsCounterLayout(GRID_LENGTH, modelOf(inputGrid), modifier = Modifier.padding(0.dp, 10.dp))
+
+                    PointsCounterLayout(inputGrid.size, modelOf(inputGrid), modifier = Modifier.padding(0.dp, 10.dp), sharedPreference)
                 }
             }
         }
     }
 }
 
-@Composable
-fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier) {
+fun loadFromSharedPreference(sharedPreferences: SharedPreferences) {
+    val gameState = sharedPreferences.getString("gameState", "")
+    if (gameState == "" || gameState == null) {
+        for (i in 0 until GRID_LENGTH) {
+            inputGrid.add(arrayOf(mutableStateOf(DEFAULT_VALUE),
+                mutableStateOf(DEFAULT_VALUE),
+                mutableStateOf(DEFAULT_VALUE),
+                mutableStateOf(DEFAULT_VALUE)))
+        }
+        return
+    }
+    val list = Json.decodeFromString<List<List<Int>>>(gameState)
+    for (x in list.indices) {
+        inputGrid.add(arrayOf(mutableStateOf(list[x][0]),
+            mutableStateOf(list[x][1]),
+            mutableStateOf(list[x][2]),
+            mutableStateOf(list[x][3])))
+    }
+}
 
-    Column {
+@Composable
+fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier, sharedPreference: SharedPreferences) {
+    val scrollState = rememberScrollState()
+
+    Column(modifier = Modifier.verticalScroll(scrollState)) {
         Row(
             modifier = modifier,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1F)) {
                 TeamText(text = stringResource(R.string.team_1), modifier = Modifier.fillMaxWidth())
@@ -82,14 +116,14 @@ fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier
                         PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
                         val j = 0
                         repeat(length) {
-                            EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j + 2])
+                            EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j + 2], sharedPreference)
                         }
                     }
                     Column(modifier = Modifier.weight(1F)) {
                         PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
                         repeat(length) {
                             val j = 1
-                            EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                            EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j], sharedPreference)
                         }
                     }
                 }
@@ -102,20 +136,29 @@ fun PointsCounterLayout(length: Int, model: Model, modifier: Modifier = Modifier
                         PointsLabelText(stringResource(id = R.string.points), Modifier.fillMaxWidth())
                         repeat(length) {
                             val j = 2
-                            EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j - 2])
+                            EditPointField(Modifier.padding(5.dp), inputGrid[it][j], inputGrid[it][j - 2], sharedPreference)
                         }
                     }
                     Column(modifier = Modifier.weight(1F)) {
                         PointsLabelText(stringResource(id = R.string.extra_points), Modifier.fillMaxWidth())
                         repeat(length) {
                             val j = 3
-                            EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j])
+                            EditExtraPointField(Modifier.padding(5.dp), inputGrid[it][j], sharedPreference)
                         }
                     }
                 }
             }
         }
-        ClearGridButton(modifier = Modifier.padding(10.dp))
+        Row {
+            ClearGridButton(modifier = Modifier.padding(10.dp), sharedPreference)
+            Spacer(modifier = Modifier.width(10.dp))
+            NewColButton(modifier = Modifier
+                .padding(10.dp, 10.dp, 5.dp, 10.dp)
+                .weight(1F), sharedPreference)
+            DelColButton(modifier = Modifier
+                .padding(5.dp, 10.dp, 10.dp, 10.dp)
+                .weight(1F), sharedPreference)
+        }
     }
 }
 
@@ -138,7 +181,7 @@ private fun TeamText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EditPointField(modifier: Modifier = Modifier, thisTeamPoints: MutableState<Int>, otherTeamPoints: MutableState<Int>) {
+fun EditPointField(modifier: Modifier = Modifier, thisTeamPoints: MutableState<Int>, otherTeamPoints: MutableState<Int>, sharedPreference: SharedPreferences) {
     TextField(
         onValueChange = {
             try {
@@ -149,6 +192,7 @@ fun EditPointField(modifier: Modifier = Modifier, thisTeamPoints: MutableState<I
                 } else {
                     otherTeamPoints.value = 11 - thisTeamPoints.value
                 }
+                sharedPreference.edit().putString("gameState", Json.encodeToString(inputGrid.map { x -> x.map { y -> y.value } })).apply()
             } catch (_: NumberFormatException) {
                 thisTeamPoints.value = DEFAULT_VALUE
                 otherTeamPoints.value = DEFAULT_VALUE
@@ -164,11 +208,12 @@ fun EditPointField(modifier: Modifier = Modifier, thisTeamPoints: MutableState<I
 }
 
 @Composable
-fun EditExtraPointField(modifier: Modifier = Modifier, mutableState: MutableState<Int>) {
+fun EditExtraPointField(modifier: Modifier = Modifier, mutableState: MutableState<Int>, sharedPreference: SharedPreferences) {
     TextField(
         onValueChange = {
             try {
                 mutableState.value = Integer.parseInt(it)
+                sharedPreference.edit().putString("gameState", Json.encodeToString(inputGrid.map { x -> x.map { y -> y.value } })).apply()
             } catch (_: NumberFormatException) {
                 mutableState.value = DEFAULT_VALUE
             }
@@ -192,7 +237,38 @@ fun PointsSumText(modifier: Modifier = Modifier, sum: () -> Int) {
 }
 
 @Composable
-fun ClearGridButton(modifier: Modifier = Modifier) {
+fun NewColButton(modifier: Modifier = Modifier, sharedPreference: SharedPreferences) {
+    Button(
+        onClick = {
+            inputGrid.add(arrayOf(mutableStateOf(DEFAULT_VALUE),
+                mutableStateOf(DEFAULT_VALUE),
+                mutableStateOf(DEFAULT_VALUE),
+                mutableStateOf(DEFAULT_VALUE)))
+            sharedPreference.edit().putString("gameState", Json.encodeToString(inputGrid.map { x -> x.map { y -> y.value } })).apply()
+
+        },
+        modifier = modifier
+    ) {
+        Text(text = stringResource(id = R.string.new_col))
+    }
+}
+
+@Composable
+fun DelColButton(modifier: Modifier = Modifier, sharedPreference: SharedPreferences) {
+    Button(
+        enabled = inputGrid.size > 6,
+        onClick = {
+            inputGrid.removeLast()
+            sharedPreference.edit().putString("gameState", Json.encodeToString(inputGrid.map { x -> x.map { y -> y.value } })).apply()
+        },
+        modifier = modifier
+    ) {
+        Text(text = stringResource(id = R.string.del_col))
+    }
+}
+
+@Composable
+fun ClearGridButton(modifier: Modifier = Modifier, sharedPreference: SharedPreferences) {
     Button(
         onClick = {
         for (row in inputGrid) {
@@ -200,6 +276,7 @@ fun ClearGridButton(modifier: Modifier = Modifier) {
                 cell.value = 0
             }
         }
+        sharedPreference.edit().putString("gameState", "").apply()
     },
         modifier = modifier
     ) {
@@ -207,11 +284,13 @@ fun ClearGridButton(modifier: Modifier = Modifier) {
     }
 }
 
+/*
 @Preview(showBackground = true,
     device = "id:pixel", showSystemUi = true)
 @Composable
 fun TipTimeLayoutPreview() {
     TipTimeTheme {
-        PointsCounterLayout(GRID_LENGTH, modelOf(inputGrid), Modifier.padding(0.dp, 10.dp))
+        PointsCounterLayout(inputGrid.size, modelOf(inputGrid), Modifier.padding(0.dp, 10.dp), this)
     }
 }
+*/
